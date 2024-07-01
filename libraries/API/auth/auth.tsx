@@ -4,13 +4,22 @@ export const login = async (data: { email: string }) => {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
-      "Content-type": "Application/json",
+      "Content-type": "application/json",
     },
     body: JSON.stringify(data),
   });
 
-  if (res.status !== 200) {
-    throw new Error("Error logging in");
+  if (!res.ok) {
+    // Check if response is not OK (status code not in range 200-299)
+    let errorMessage = "Failed log in";
+    const responseBody = await res.json(); // Attempt to parse response body as JSON
+
+    // Check if response body has an error message from the backend
+    if (responseBody && responseBody.message) {
+      errorMessage = responseBody.message;
+    }
+
+    throw new Error(errorMessage);
   }
 };
 
@@ -21,13 +30,22 @@ export const authenticate = async (data: {
   const res = await fetch(`${API_URL}/auth/authenticate`, {
     method: "POST",
     headers: {
-      "Content-type": "Application/json",
+      "Content-type": "application/json",
     },
     body: JSON.stringify(data),
   });
 
-  if (res.status !== 200) {
-    throw new Error("Error logging in");
+  if (!res.ok) {
+    // Check if response is not OK (status code not in range 200-299)
+    let errorMessage = "Failed log in";
+    const responseBody = await res.json(); // Attempt to parse response body as JSON
+
+    // Check if response body has an error message from the backend
+    if (responseBody && responseBody.message) {
+      errorMessage = responseBody.message;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return await res.json();

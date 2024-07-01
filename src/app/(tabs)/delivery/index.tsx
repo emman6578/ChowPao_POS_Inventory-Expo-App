@@ -28,19 +28,12 @@ const Delivery = () => {
     return <Text style={styles.errorText}>Error: {error.message}</Text>;
   }
 
-  const handleSelectDriver = (
-    driverId: string,
-    loadProducts: number,
-    retail: number,
-    wholesale: number
-  ) => {
+  const handleSelectDriver = (driverId: string, loadProducts: number) => {
     router.push({
       pathname: "delivery/driverTotalSales",
       params: {
         id: driverId,
         totalLoadProducts: loadProducts,
-        retailTotal: retail,
-        wholesaleTotal: wholesale,
       },
     });
   };
@@ -57,9 +50,7 @@ const Delivery = () => {
             onPress={() =>
               handleSelectDriver(
                 delivery.driver?.id,
-                delivery.total_load_products,
-                delivery.expected_sales.toFixed(2),
-                delivery.expected_sales_wholesale.toFixed(2)
+                delivery.total_load_products
               )
             }
           >
@@ -71,14 +62,22 @@ const Delivery = () => {
             </Text>
             <Text style={styles.status}>Status: {delivery.status}</Text>
             <Text style={styles.totalLoadProducts}>
-              Total Load Products: {delivery.total_load_products}
+              Total Load Products:{" "}
+              {delivery.total_load_products === null
+                ? 0
+                : delivery.total_load_products}
             </Text>
             <Text style={styles.expectedSales}>
-              Expected Sales: &#8369;{delivery.expected_sales.toFixed(2)}
+              Expected Sales: &#8369;
+              {delivery.expected_sales === null
+                ? 0
+                : delivery.expected_sales.toFixed(2)}
             </Text>
             <Text style={styles.expectedSalesWholesale}>
               Expected Sales Wholesale: &#8369;
-              {delivery.expected_sales_wholesale.toFixed(2)}
+              {delivery.expected_sales_wholesale === null
+                ? 0
+                : delivery.expected_sales_wholesale.toFixed(2)}
             </Text>
             <View style={styles.productList}>
               {delivery.DriverLoadProducts.map((product: any) => (
