@@ -61,7 +61,7 @@ export default function TabOneScreen() {
       .map((item: any) => item.Product.name);
 
     router.push({
-      pathname: "driver/addToSales",
+      pathname: "driver/customer",
       params: {
         productId: selectedProductIds,
         productName: name,
@@ -110,34 +110,36 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={{ padding: 10, alignItems: "center" }}>
+        <Text style={{ fontWeight: "900", fontSize: 20 }}>
+          Welcome {driver?.fullname}
+        </Text>
+        <Text style={{ fontWeight: "900", fontSize: 15 }}>
+          Delivery Load For Today!
+        </Text>
+      </View>
       <View style={styles.headerCard}>
-        <View style={styles.headerComponent}>
-          <Text style={styles.headerText}>Welcome {driver?.fullname}</Text>
-          <Text style={styles.headerText}>Delivery Load For Today!</Text>
-        </View>
-        <View style={styles.headerComponent}>
-          <Text style={styles.headerText}>
-            Total Products:{" "}
-            {<Text style={{ color: "red" }}>{load?.total_load_products}</Text>}
-          </Text>
+        <Text style={styles.headerText}>
+          Total Products: {`\t`}
+          {<Text style={{ color: "white" }}>{load?.total_load_products}</Text>}
+        </Text>
 
-          <Text style={styles.headerText}>
-            Expected Sales in Retail:
-            {
-              <Text style={{ color: "red" }}>
-                {"\n"}&#8369; {load?.expected_sales}
-              </Text>
-            }
-          </Text>
-          <Text style={styles.headerText}>
-            Expected Sales in wholesale:
-            {
-              <Text style={{ color: "red" }}>
-                {"\n"}&#8369; {load?.expected_sales_wholesale}
-              </Text>
-            }
-          </Text>
-        </View>
+        <Text style={styles.headerText}>
+          Expected Sales in Retail:
+          {
+            <Text style={{ color: "white" }}>
+              {`\t`} &#8369; {load?.expected_sales}
+            </Text>
+          }
+        </Text>
+        <Text style={styles.headerText}>
+          Expected Sales in Wholesale:
+          {
+            <Text style={{ color: "white" }}>
+              {`\t`}&#8369; {load?.expected_sales_wholesale}
+            </Text>
+          }
+        </Text>
       </View>
       <FlatList
         data={products}
@@ -166,22 +168,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerCard: {
-    backgroundColor: "lightgray",
-    padding: 5,
+    backgroundColor: "teal",
+    padding: 20,
     borderRadius: 20,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-evenly",
   },
   headerComponent: {
-    backgroundColor: "lightgray",
+    backgroundColor: "teal",
     borderRadius: 20,
     padding: 10,
   },
   headerText: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "900",
-    color: "black",
+    color: "lightgray",
+    alignSelf: "center",
   },
   productList: {
     marginTop: 10,
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     width: itemWidth,
   },
   selectedProductItem: {
-    backgroundColor: "coral",
+    backgroundColor: "#f9f4d9",
   },
   productText: {
     fontSize: 15,
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     padding: 15,
     borderRadius: 20,
-    backgroundColor: "yellow",
+    backgroundColor: "coral",
     alignItems: "center",
   },
   disabledConfirmButton: {

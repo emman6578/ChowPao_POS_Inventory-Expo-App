@@ -10,6 +10,7 @@ interface ProtectedRoutesType {
   AddToSales: (data: any) => Promise<any>;
   GetAllTotalSalesDriver: () => Promise<any>;
   ProductSold: () => Promise<any>;
+  CreateCustomer: (data: any) => Promise<any>;
 }
 
 const ProtectedRoutesContext = createContext<ProtectedRoutesType | undefined>(
@@ -186,6 +187,32 @@ export const ProtectedRoutesContextProvider = ({
     return await res.json();
   };
 
+  const CreateCustomer = async (data: any) => {
+    const res = await fetch(`${API_URL}/driver/customer`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      // Check if response is not OK (status code not in range 200-299)
+      let errorMessage = "Failed to get all total delivery sales by driver";
+      const responseBody = await res.json(); // Attempt to parse response body as JSON
+
+      // Check if response body has an error message from the backend
+      if (responseBody && responseBody.message) {
+        errorMessage = responseBody.message;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    return await res.json();
+  };
+
   return (
     <ProtectedRoutesContext.Provider
       value={{
@@ -196,6 +223,7 @@ export const ProtectedRoutesContextProvider = ({
         AddToSales,
         GetAllTotalSalesDriver,
         ProductSold,
+        CreateCustomer,
       }}
     >
       {children}

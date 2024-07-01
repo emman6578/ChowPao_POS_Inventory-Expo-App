@@ -62,8 +62,12 @@ const ProductLayout = () => {
           ),
         }}
       />
-
-      {/* stack screen add below here */}
+      <Stack.Screen
+        name="customer"
+        options={{
+          title: "Select Customer",
+        }}
+      />
     </Stack>
   );
 };

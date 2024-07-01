@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Dimensions,
 } from "react-native";
 import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,8 +14,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { View, Text } from "@/src/components/Themed";
 
 const AddToSales = () => {
-  const { GetDeliveryProducts, GetCustomers, AddToSales } =
-    useProtectedRoutesApi();
+  const { GetDeliveryProducts, AddToSales } = useProtectedRoutesApi();
 
   const queryClient = useQueryClient();
 
@@ -24,13 +24,7 @@ const AddToSales = () => {
     queryFn: GetDeliveryProducts,
   });
 
-  const getCustomer = useQuery({
-    queryKey: ["customer"],
-    queryFn: GetCustomers,
-  });
-
   const products = loadProducts.data?.data.DriverLoadProducts;
-  const customers = getCustomer.data?.data;
 
   const addSales = useMutation({
     mutationFn: AddToSales,
@@ -39,7 +33,7 @@ const AddToSales = () => {
       queryClient.invalidateQueries({ queryKey: ["totalSales"] });
       queryClient.invalidateQueries({ queryKey: ["productSold"] });
       Alert.alert("Success", "Happy shopping");
-      router.back();
+      router.replace("/driver");
     },
     onError: (err) => {
       Alert.alert("Error", "Sad shopping\n\n" + err);
@@ -71,7 +65,11 @@ const AddToSales = () => {
   };
 
   // Map product IDs to products with dynamically adjusted quantities
-  const { productId } = useLocalSearchParams();
+  const { prodIds, customerId, csName } = useLocalSearchParams();
+
+  console.log(csName);
+
+  const productId = prodIds;
   let productIdsArray: string[] = [];
 
   if (typeof productId === "string") {
@@ -99,182 +97,176 @@ const AddToSales = () => {
       product_id: prod.product_id,
       quantity: prod.quantity,
     })),
-    customerid: selectedCustomer, // Use selected customer ID here
+    customerid: customerId, // Use selected customer ID here
     saleType: saleType, // Use selected saleType here
     paymentOptions: paymentOptions, // Use selected paymentOptions here
   };
 
-  // Function to handle customer selection
-  const handleSelectCustomer = (customerId: string) => {
-    if (selectedCustomer === customerId) {
-      setSelectedCustomer(null); // Deselect if already selected
-    } else {
-      setSelectedCustomer(customerId); // Select the new customer
-    }
-  };
-
   return (
-    <View style={{ flex: 1, padding: 5 }}>
-      <Stack.Screen options={{ title: "Confirm Sale" }} />
-      <Text style={{ marginBottom: 10, fontWeight: "900" }}>
-        Select A customer:
-      </Text>
-      <View style={{ maxHeight: 150 }}>
-        <FlatList
-          data={customers} // Pass the customers array to FlatList
-          keyExtractor={(item) => item.id} // Assuming id is unique
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={{
-                marginBottom: 10,
-                backgroundColor:
-                  selectedCustomer === item.id ? "coral" : "teal",
-                padding: 10,
-                borderRadius: 5,
-              }}
-              onPress={() => {
-                handleSelectCustomer(item.id);
-              }}
-            >
-              <Text style={{ fontSize: 12 }}>{item.name}</Text>
-              <Text style={{ fontSize: 12 }}>{item.address}</Text>
-            </TouchableOpacity>
-          )}
-          numColumns={2} // Set number of columns to 2
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-        />
-      </View>
+    <>
+      <View style={{ flex: 1, padding: 5 }}>
+        <Stack.Screen options={{ title: "Confirm Sale" }} />
 
-      <ScrollView contentContainerStyle={{ marginTop: 10 }}>
-        {productsArray.map((prod) => (
-          <View key={prod.product_id} style={{ marginBottom: 5 }}>
-            <Text style={{ marginBottom: 5, fontWeight: "900" }}>
-              {getProductName(prod.product_id)}
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: "white",
-                padding: 10,
-                borderRadius: 5,
-                maxWidth: "50%",
-              }}
-              keyboardType="numeric"
-              placeholder="Enter quantity"
-              value={quantities[prod.product_id]?.toString() || ""}
-              onChangeText={(text) => {
-                const quantity = parseInt(text, 10) || 0;
-                handleInputQuantityChange(prod.product_id, quantity);
-              }}
-            />
+        <View
+          style={{
+            alignItems: "center",
+            padding: 20,
+            backgroundColor: "coral",
+          }}
+        >
+          <Text style={{ fontSize: 20, fontWeight: "900", color: "black" }}>
+            Customer: {<Text style={{ color: "teal" }}>{csName}</Text>}
+          </Text>
+        </View>
 
-            <View
-              style={{
-                position: "absolute",
-                alignSelf: "flex-end",
-                top: "40%",
-                right: "10%",
-              }}
-            >
-              <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: "lightgray",
-                    borderRadius: 10,
-                    marginRight: 5,
-                  }}
-                  onPress={() => handleQuantityChange(prod.product_id, 1)}
-                >
-                  <Text
+        <ScrollView contentContainerStyle={{ marginTop: 10 }}>
+          {productsArray.map((prod) => (
+            <View key={prod.product_id} style={{ marginBottom: 5 }}>
+              <Text style={{ marginBottom: 5, fontWeight: "900" }}>
+                {getProductName(prod.product_id)}
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: "white",
+                  padding: 10,
+                  borderRadius: 5,
+                  maxWidth: "50%",
+                }}
+                keyboardType="numeric"
+                placeholder="Enter quantity"
+                value={quantities[prod.product_id]?.toString() || ""}
+                onChangeText={(text) => {
+                  const quantity = parseInt(text, 10) || 0;
+                  handleInputQuantityChange(prod.product_id, quantity);
+                }}
+              />
+
+              <View
+                style={{
+                  position: "absolute",
+                  alignSelf: "flex-end",
+                  top: "40%",
+                  right: "10%",
+                }}
+              >
+                <View style={{ flexDirection: "row" }}>
+                  <TouchableOpacity
                     style={{
-                      marginHorizontal: 20,
-                      fontSize: 20,
-                      fontWeight: "900",
-                      color: "black",
+                      backgroundColor: "lightgray",
+                      borderRadius: 10,
+                      marginRight: 5,
                     }}
+                    onPress={() => handleQuantityChange(prod.product_id, 1)}
                   >
-                    +
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ backgroundColor: "lightgray", borderRadius: 10 }}
-                  onPress={() => handleQuantityChange(prod.product_id, -1)}
-                >
-                  <Text
-                    style={{
-                      marginHorizontal: 20,
-                      fontSize: 20,
-                      fontWeight: "900",
-                      color: "black",
-                    }}
+                    <Text
+                      style={{
+                        marginHorizontal: 20,
+                        fontSize: 20,
+                        fontWeight: "900",
+                        color: "black",
+                      }}
+                    >
+                      +
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "lightgray", borderRadius: 10 }}
+                    onPress={() => handleQuantityChange(prod.product_id, -1)}
                   >
-                    -
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={{
+                        marginHorizontal: 20,
+                        fontSize: 20,
+                        fontWeight: "900",
+                        color: "black",
+                      }}
+                    >
+                      -
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+          ))}
+
+          <View style={{ marginVertical: 10 }}>
+            {/* List options for saleType */}
+            {["RETAIL", "WHOLESALE"].map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={{
+                  marginRight: 10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  borderRadius: 5,
+                  marginBottom: 5,
+                  backgroundColor: saleType === type ? "coral" : "teal",
+                }}
+                onPress={() => setSaleType(type)}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontWeight: "900",
+                    alignSelf: "center",
+                  }}
+                >
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        ))}
 
-        <View style={{ marginVertical: 10 }}>
-          {/* List options for saleType */}
-          {["RETAIL", "WHOLESALE"].map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={{
-                marginRight: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 5,
-                marginBottom: 5,
-                backgroundColor: saleType === type ? "coral" : "teal",
-              }}
-              onPress={() => setSaleType(type)}
-            >
-              <Text style={{ color: "#FFFFFF", fontWeight: "900" }}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={{ marginBottom: 20 }}>
-          {/* List options for paymentOptions */}
-          {["CASH", "GCASH", "PAY_LATER"].map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={{
-                marginRight: 10,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 5,
-                backgroundColor: paymentOptions === option ? "coral" : "teal",
-                marginBottom: 5,
-                maxWidth: "75%",
-              }}
-              onPress={() => setPaymentOptions(option)}
-            >
-              <Text style={{ color: "#FFFFFF", fontWeight: "900" }}>
-                {option}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+          <View style={{ marginBottom: 20 }}>
+            {/* List options for paymentOptions */}
+            {["CASH", "GCASH", "PAY_LATER"].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={{
+                  marginRight: 10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  borderRadius: 5,
+                  backgroundColor: paymentOptions === option ? "coral" : "teal",
+                  marginBottom: 5,
+                  maxWidth: "100%",
+                }}
+                onPress={() => setPaymentOptions(option)}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontWeight: "900",
+                    alignSelf: "center",
+                  }}
+                >
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
       <TouchableOpacity
         style={{
+          alignSelf: "center",
+          backgroundColor: "#FFDFD3",
           padding: 10,
-          backgroundColor: "blue",
-          alignItems: "center",
-          borderRadius: 20,
+          width: "50%",
+          borderRadius: 50,
         }}
         onPress={() => {
           addSales.mutate(requestBody);
         }}
       >
-        <Text style={{ color: "white", fontWeight: "900" }}>Confirm</Text>
+        <Text
+          style={{ alignSelf: "center", fontWeight: "900", color: "black" }}
+        >
+          Confirm
+        </Text>
       </TouchableOpacity>
-    </View>
+    </>
   );
 };
 
