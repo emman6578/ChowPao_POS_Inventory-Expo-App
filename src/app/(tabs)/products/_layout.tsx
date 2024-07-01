@@ -83,7 +83,7 @@ const ProductLayout = () => {
                     <AntDesign
                       name="download"
                       size={25}
-                      color="yellow"
+                      color="lightblue"
                       style={{ marginRight: 30, opacity: pressed ? 0.5 : 1 }}
                     />
                   )}
