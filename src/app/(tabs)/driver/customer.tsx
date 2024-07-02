@@ -107,7 +107,9 @@ const Customer = () => {
           });
         }}
       >
-        <Text>Confirm Selection</Text>
+        <Text style={{ color: "white", fontWeight: "900" }}>
+          Confirm Selection
+        </Text>
       </TouchableOpacity>
     </>
   );

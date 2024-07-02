@@ -1,18 +1,22 @@
 import { View, Text } from "@/src/components/Themed";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
+import moment from "moment";
 
 const Sales = () => {
   const router = useRouter();
-  const { GetAllTotalSalesDriver, ProductSold } = useProtectedRoutesApi();
+  const queryClient = useQueryClient();
+  const { GetAllTotalSalesDriver, ProductSold, ConfirmSales } =
+    useProtectedRoutesApi();
 
   const [selectedSaleType, setSelectedSaleType] = useState("");
   const [selectedPaymentOption, setSelectedPaymentOption] = useState("");
@@ -31,6 +35,22 @@ const Sales = () => {
 
   const productSold = ProductSoldByDriver.data?.data;
 
+  const Confirm = useMutation({
+    mutationFn: ConfirmSales,
+    onSuccess: () => {
+      Alert.alert("Success", "Successfully Confirmed Sales for Today!");
+      queryClient.invalidateQueries({ queryKey: ["totalSales"] });
+      queryClient.invalidateQueries({ queryKey: ["productSold"] });
+    },
+    onError: (err) => {
+      Alert.alert("Error", `Failed to confirm` + err);
+    },
+  });
+
+  const handleConfirm = () => {
+    Confirm.mutate();
+  };
+
   const filteredProducts = productSold?.filter((item: any) => {
     const saleTypeMatch = selectedSaleType
       ? item.saleType === selectedSaleType
@@ -46,6 +66,7 @@ const Sales = () => {
       <Text style={styles.productText}>Customer: {item.Customer?.name}</Text>
       <Text style={styles.productText}>Sales: &#8369;{item.sales}</Text>
       <Text style={styles.productText}>Quantity: {item.quantity}</Text>
+      <Text style={styles.productText}>Product: {item.Product?.name}</Text>
       <Text style={styles.productText}>Sale Type: {item.saleType}</Text>
       <Text style={styles.productText}>
         Payment Options: {item.paymentOptions}
@@ -56,6 +77,33 @@ const Sales = () => {
       <Text style={styles.productText}>Balance: {item.balance}</Text>
     </View>
   );
+
+  const [isButtonActive, setIsButtonActive] = useState(false);
+  const [currentTime, setCurrentTime] = useState(moment().format("LTS"));
+
+  useEffect(() => {
+    const checkTime = () => {
+      const now = moment();
+      const targetTime = moment().set({
+        hour: 17,
+        minute: 0,
+      });
+
+      setCurrentTime(now.format("LTS")); // Update current time
+
+      if (now.isSameOrAfter(targetTime)) {
+        setIsButtonActive(true);
+      } else {
+        setIsButtonActive(false);
+      }
+    };
+
+    // Check the time every second
+    const interval = setInterval(checkTime, 1000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -202,6 +250,27 @@ const Sales = () => {
           keyExtractor={(item) => item.id}
         />
       )}
+
+      <TouchableOpacity
+        style={{
+          alignItems: "center",
+          padding: 5,
+          backgroundColor: !isButtonActive ? "gray" : "teal",
+          borderRadius: 20,
+          marginTop: 5,
+        }}
+        onPress={handleConfirm}
+        disabled={!isButtonActive}
+      >
+        <Text style={{ color: "white", fontWeight: "900" }}>
+          CONFIRM ALL SALES
+        </Text>
+      </TouchableOpacity>
+      {!isButtonActive && (
+        <Text style={{ fontSize: 8, alignSelf: "center", color: "red" }}>
+          The button will activate only at 5 PM. {<Text>{currentTime}</Text>}
+        </Text>
+      )}
     </View>
   );
 };
@@ -209,7 +278,7 @@ const Sales = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 5,
   },
   header: {
     fontSize: 28,
@@ -218,7 +287,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   totalText: {
-    fontSize: 20,
+    fontSize: 15,
     marginVertical: 5,
     textAlign: "center",
   },
@@ -230,17 +299,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
-    marginTop: 20,
+    marginTop: 5,
     backgroundColor: "lightgray",
     borderRadius: 20,
   },
   productText: {
-    fontSize: 16,
+    fontSize: 13,
     color: "black",
   },
   filterContainer: {
-    height: 60,
-    marginBottom: 10,
+    height: 70,
   },
   scrollViewContent: {
     paddingVertical: 10,
@@ -255,6 +323,7 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 16,
     color: "black",
+    fontWeight: "500",
   },
   selectedFilter: {
     backgroundColor: "#2e86de",

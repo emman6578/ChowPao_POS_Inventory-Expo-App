@@ -11,6 +11,8 @@ import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
+import moment from "moment";
+
 // DRIVER HOME SCREEN
 
 const screenWidth = Dimensions.get("window").width;
@@ -72,7 +74,13 @@ export default function TabOneScreen() {
   };
 
   const renderProductItem = ({ item }: any) => (
-    <TouchableOpacity onPress={() => toggleProductSelection(item.Product.id)}>
+    <TouchableOpacity
+      onPress={() =>
+        item.quantity > 0 && toggleProductSelection(item.Product.id)
+      }
+      style={item.quantity === 0 ? styles.disabledProductItem : null}
+      disabled={item.quantity === 0}
+    >
       <View
         style={[
           styles.productItem,
@@ -115,7 +123,8 @@ export default function TabOneScreen() {
           Welcome {driver?.fullname}
         </Text>
         <Text style={{ fontWeight: "900", fontSize: 15 }}>
-          Delivery Load For Today!
+          Delivery Load For Today! {"\t"}
+          {<Text>{moment().format("MMMM Do YYYY")}</Text>}
         </Text>
       </View>
       <View style={styles.headerCard}>
@@ -216,5 +225,8 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: "black",
     fontWeight: "900",
+  },
+  disabledProductItem: {
+    opacity: 0.3,
   },
 });
