@@ -3,11 +3,22 @@ import { View, Text } from "@/src/components/Themed"; // Assuming Themed compone
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes";
-import { StyleSheet } from "react-native";
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import moment from "moment";
 
 const DriverTotalSales = () => {
   const { id, totalLoadProducts } = useLocalSearchParams();
-  const { GetDriverSales } = useProtectedRoutesApi();
+  const { GetDriverSales, GetDeliveries } = useProtectedRoutesApi();
+
+  const deliveryList = useQuery({
+    queryKey: ["deliveries"],
+    queryFn: GetDeliveries,
+  });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["driverSales"],
@@ -25,11 +36,33 @@ const DriverTotalSales = () => {
     totalQuantity,
   } = data?.data.totals || {};
 
+  const delivery = deliveryList.data?.data;
+
+  const ProductList = ({ delivery }: any) => {
+    return (
+      <View style={styles.productList} key={delivery.id}>
+        {delivery.DriverLoadProducts.map((product: any) => (
+          <View key={product.id} style={styles.productCard}>
+            <Text style={styles.productText}>{product.Product?.name}</Text>
+            <Text style={styles.productText}>Quantity: {product.quantity}</Text>
+            <Text style={styles.productText}>
+              Price: &#8369;{product.Product?.price}
+            </Text>
+            <Text style={styles.productText}>
+              Wholesale Price: &#8369;{product.Product?.wholesale_price}
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: `${fullname} Sales` }} />
+      <Stack.Screen options={{ title: `Total Sales` }} />
       <Text style={styles.header}>{fullname}</Text>
       <Text style={styles.email}>{email}</Text>
+      <Text style={styles.email}>{moment().format("MMMM Do YYYY")}</Text>
 
       <View style={styles.totalsContainer}>
         <Text style={styles.totalItem}>
@@ -47,9 +80,32 @@ const DriverTotalSales = () => {
           Total Quantity Sold: {totalQuantity}
         </Text>
         <Text style={styles.totalItem}>
-          Quantity Remaining in Truck: {totalLoadProducts - totalQuantity}
+          Quantity Remaining in Truck: {totalLoadProducts}
         </Text>
       </View>
+
+      <FlatList
+        data={delivery}
+        renderItem={({ item }: any) => <ProductList delivery={item} />}
+        numColumns={2}
+        contentContainerStyle={{ gap: 10, padding: 10 }}
+        columnWrapperStyle={{ gap: 10 }}
+      />
+
+      <TouchableOpacity
+        style={{
+          padding: 10,
+          backgroundColor: "teal",
+          marginTop: 5,
+          borderRadius: 20,
+          width: "100%",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontWeight: "900", fontSize: 15, letterSpacing: 3 }}>
+          PRINT {"\t"} RECEIPT
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -57,21 +113,19 @@ const DriverTotalSales = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 5,
     justifyContent: "center",
     alignItems: "center",
   },
   header: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
   },
   email: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: 12,
   },
   totalsContainer: {
-    marginTop: 20,
+    marginTop: 5,
     borderWidth: 1,
     borderColor: "#ccc",
     padding: 10,
@@ -79,8 +133,24 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   totalItem: {
-    fontSize: 16,
+    fontSize: 15,
     marginBottom: 5,
+  },
+
+  productList: {
+    marginTop: 5,
+    width: "100%",
+  },
+  productCard: {
+    backgroundColor: "lightgreen",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  productText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "900",
   },
 });
 

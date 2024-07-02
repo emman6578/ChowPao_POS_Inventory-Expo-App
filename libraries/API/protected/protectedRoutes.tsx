@@ -30,6 +30,7 @@ interface ProtectedRoutesType {
     minBalance?: number;
   }) => Promise<any>;
   GetDriverSales: (id: string) => Promise<any>;
+  SalesReport: () => Promise<any>;
 }
 
 const ProtectedRoutesContext = createContext<ProtectedRoutesType | undefined>(
@@ -582,6 +583,29 @@ export const ProtectedRoutesContextProvider = ({
     return res.json();
   };
 
+  const SalesReport = async () => {
+    const res = await fetch(`${API_URL}/report`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      // Check if response is not OK (status code not in range 200-299)
+      let errorMessage = "Failed to get driver total sales";
+      const responseBody = await res.json(); // Attempt to parse response body as JSON
+
+      // Check if response body has an error message from the backend
+      if (responseBody && responseBody.message) {
+        errorMessage = responseBody.message;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  };
+
   return (
     <ProtectedRoutesContext.Provider
       value={{
@@ -604,6 +628,7 @@ export const ProtectedRoutesContextProvider = ({
         GetDeliveries,
         GetAllSales,
         GetDriverSales,
+        SalesReport,
       }}
     >
       {children}

@@ -79,24 +79,6 @@ const Delivery = () => {
                 ? 0
                 : delivery.expected_sales_wholesale.toFixed(2)}
             </Text>
-            <View style={styles.productList}>
-              {delivery.DriverLoadProducts.map((product: any) => (
-                <View key={product.id} style={styles.productCard}>
-                  <Text style={styles.productText}>
-                    {product.Product?.name}
-                  </Text>
-                  <Text style={styles.productText}>
-                    Quantity: {product.quantity}
-                  </Text>
-                  <Text style={styles.productText}>
-                    Price: &#8369;{product.Product?.price}
-                  </Text>
-                  <Text style={styles.productText}>
-                    Wholesale Price: &#8369;{product.Product?.wholesale_price}
-                  </Text>
-                </View>
-              ))}
-            </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -156,21 +138,7 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 10,
   },
-  productList: {
-    marginTop: 10,
-    paddingLeft: 10,
-  },
-  productCard: {
-    backgroundColor: "lightgreen",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  productText: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "900",
-  },
+
   loadingText: {
     fontSize: 18,
     textAlign: "center",

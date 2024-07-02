@@ -66,6 +66,17 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="sale_summary"
+        options={{
+          headerShown: false,
+          title: "Sales Report",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="files-o" size={24} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
