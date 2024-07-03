@@ -12,6 +12,7 @@ interface ProtectedRoutesType {
   ProductSold: () => Promise<any>;
   CreateCustomer: (data: any) => Promise<any>;
   ConfirmSales: () => Promise<any>;
+  UpdateDeliveryLoad: () => Promise<any>;
 }
 
 const ProtectedRoutesContext = createContext<ProtectedRoutesType | undefined>(
@@ -102,7 +103,7 @@ export const ProtectedRoutesContextProvider = ({
 
     if (!res.ok) {
       // Check if response is not OK (status code not in range 200-299)
-      let errorMessage = "Failed to get delivery products";
+      let errorMessage = "Failed to get customers";
       const responseBody = await res.json(); // Attempt to parse response body as JSON
 
       // Check if response body has an error message from the backend
@@ -128,7 +129,7 @@ export const ProtectedRoutesContextProvider = ({
 
     if (!res.ok) {
       // Check if response is not OK (status code not in range 200-299)
-      let errorMessage = "Failed to get delivery products";
+      let errorMessage = "Failed to add to sales";
       const responseBody = await res.json(); // Attempt to parse response body as JSON
 
       // Check if response body has an error message from the backend
@@ -174,7 +175,7 @@ export const ProtectedRoutesContextProvider = ({
 
     if (!res.ok) {
       // Check if response is not OK (status code not in range 200-299)
-      let errorMessage = "Failed to get all total delivery sales by driver";
+      let errorMessage = "Failed to get product sold";
       const responseBody = await res.json(); // Attempt to parse response body as JSON
 
       // Check if response body has an error message from the backend
@@ -200,7 +201,7 @@ export const ProtectedRoutesContextProvider = ({
 
     if (!res.ok) {
       // Check if response is not OK (status code not in range 200-299)
-      let errorMessage = "Failed to get all total delivery sales by driver";
+      let errorMessage = "Failed to create customer";
       const responseBody = await res.json(); // Attempt to parse response body as JSON
 
       // Check if response body has an error message from the backend
@@ -217,6 +218,31 @@ export const ProtectedRoutesContextProvider = ({
   const ConfirmSales = async () => {
     const res = await fetch(`${API_URL}/driver/sales/confirm`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      // Check if response is not OK (status code not in range 200-299)
+      let errorMessage = "Failed to confirm sales";
+      const responseBody = await res.json(); // Attempt to parse response body as JSON
+
+      // Check if response body has an error message from the backend
+      if (responseBody && responseBody.message) {
+        errorMessage = responseBody.message;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    return await res.json();
+  };
+
+  const UpdateDeliveryLoad = async () => {
+    const res = await fetch(`${API_URL}/driver/delivery/update/load`, {
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${authToken}`,
         "Content-Type": "application/json",
@@ -251,6 +277,7 @@ export const ProtectedRoutesContextProvider = ({
         ProductSold,
         CreateCustomer,
         ConfirmSales,
+        UpdateDeliveryLoad,
       }}
     >
       {children}

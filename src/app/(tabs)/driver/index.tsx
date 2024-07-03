@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Alert,
+  RefreshControl,
 } from "react-native";
 import { Text, View } from "@/src/components/Themed";
 
 import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import moment from "moment";
@@ -19,10 +21,18 @@ const screenWidth = Dimensions.get("window").width;
 const itemWidth = (screenWidth - 20) / 2; // Adjusted for proper width and spacing
 
 export default function TabOneScreen() {
-  const { GetDriverLoggedIn, GetDeliveryLoad, GetDeliveryProducts } =
-    useProtectedRoutesApi();
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    GetDriverLoggedIn,
+    GetDeliveryLoad,
+    GetDeliveryProducts,
+    UpdateDeliveryLoad,
+  } = useProtectedRoutesApi();
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const driverDetails = useQuery({
     queryKey: ["driver"],
@@ -45,7 +55,16 @@ export default function TabOneScreen() {
 
   const products = loadProducts.data?.data.DriverLoadProducts;
 
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const updateDeliveryLoad = useMutation({
+    mutationFn: UpdateDeliveryLoad,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deliveryLoad"] });
+      queryClient.invalidateQueries({ queryKey: ["deliveryProducts"] });
+    },
+    onError: (err) => {
+      Alert.alert("Error", "Failed to " + err);
+    },
+  });
 
   const toggleProductSelection = (productId: string) => {
     setSelectedProductIds((prevSelectedProductIds) => {
@@ -71,6 +90,12 @@ export default function TabOneScreen() {
     });
 
     setSelectedProductIds([]);
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    updateDeliveryLoad.mutate();
+    setRefreshing(false);
   };
 
   const renderProductItem = ({ item }: any) => (
@@ -137,7 +162,10 @@ export default function TabOneScreen() {
           Expected Sales in Retail:
           {
             <Text style={{ color: "white" }}>
-              {`\t`} &#8369; {load?.expected_sales}
+              {`\t`} &#8369;{" "}
+              {load?.expected_sales === null
+                ? 0
+                : load?.expected_sales.toFixed(2)}
             </Text>
           }
         </Text>
@@ -145,7 +173,10 @@ export default function TabOneScreen() {
           Expected Sales in Wholesale:
           {
             <Text style={{ color: "white" }}>
-              {`\t`}&#8369; {load?.expected_sales_wholesale}
+              {`\t`}&#8369;
+              {load?.expected_sales_wholesale === null
+                ? 0
+                : load?.expected_sales_wholesale.toFixed(2)}
             </Text>
           }
         </Text>
@@ -156,6 +187,9 @@ export default function TabOneScreen() {
         keyExtractor={(item) => item.Product.id}
         numColumns={2}
         style={styles.productList}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
 
       <TouchableOpacity
@@ -214,13 +248,13 @@ const styles = StyleSheet.create({
     color: "black",
   },
   confirmButton: {
-    padding: 15,
+    padding: 10,
     borderRadius: 20,
     backgroundColor: "coral",
     alignItems: "center",
   },
   disabledConfirmButton: {
-    backgroundColor: "grey",
+    backgroundColor: "lightgray",
   },
   confirmButtonText: {
     color: "black",

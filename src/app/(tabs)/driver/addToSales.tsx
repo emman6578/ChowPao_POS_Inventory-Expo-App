@@ -32,6 +32,7 @@ const AddToSales = () => {
       queryClient.invalidateQueries({ queryKey: ["deliveryProducts"] });
       queryClient.invalidateQueries({ queryKey: ["totalSales"] });
       queryClient.invalidateQueries({ queryKey: ["productSold"] });
+
       Alert.alert("Success", "Happy shopping");
       router.replace("/driver");
     },
