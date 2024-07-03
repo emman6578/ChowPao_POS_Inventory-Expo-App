@@ -3,7 +3,7 @@ import { View, Text } from "@/src/components/Themed";
 import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { FlatList, StyleSheet } from "react-native";
+import { FlatList, StyleSheet, TouchableOpacity } from "react-native";
 
 const ProductSold = () => {
   const { id } = useLocalSearchParams();
@@ -57,6 +57,12 @@ const ProductSold = () => {
           )}
         />
       )}
+
+      <TouchableOpacity
+        style={{ alignItems: "center", padding: 10, backgroundColor: "red" }}
+      >
+        <Text>Print Daily Report</Text>
+      </TouchableOpacity>
     </View>
   );
 };

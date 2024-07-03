@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text } from "@/src/components/Themed"; // Assuming Themed components include StyleSheet
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -8,10 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import moment from "moment";
 
 const DriverTotalSales = () => {
+  const [refresh, setRefresh] = useState(false);
+
   const { id, totalLoadProducts } = useLocalSearchParams();
   const { GetDriverSales, GetDeliveries } = useProtectedRoutesApi();
 
@@ -20,7 +23,7 @@ const DriverTotalSales = () => {
     queryFn: GetDeliveries,
   });
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["driverSales"],
     queryFn: () => GetDriverSales(id as string),
   });
@@ -57,6 +60,13 @@ const DriverTotalSales = () => {
     );
   };
 
+  const onRefresh = () => {
+    setRefresh(true);
+    refetch();
+    deliveryList.refetch();
+    setRefresh(false);
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: `Total Sales` }} />
@@ -90,6 +100,9 @@ const DriverTotalSales = () => {
         numColumns={2}
         contentContainerStyle={{ gap: 10, padding: 10 }}
         columnWrapperStyle={{ gap: 10 }}
+        refreshControl={
+          <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+        }
       />
 
       <TouchableOpacity

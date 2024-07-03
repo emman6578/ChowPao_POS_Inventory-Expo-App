@@ -6,16 +6,19 @@ import {
   StyleSheet,
   Touchable,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 
 const Delivery = () => {
+  const [refresh, setRefresh] = useState(false);
+
   const { GetDeliveries } = useProtectedRoutesApi();
   const router = useRouter();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["deliveries"],
     queryFn: GetDeliveries,
   });
@@ -38,11 +41,22 @@ const Delivery = () => {
     });
   };
 
+  const onRefresh = () => {
+    setRefresh(true);
+    refetch();
+    setRefresh(false);
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: "Delivery" }} />
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refresh} onRefresh={onRefresh} />
+        }
+      >
         {data?.data?.map((delivery: any) => (
           <TouchableOpacity
             key={delivery.id}

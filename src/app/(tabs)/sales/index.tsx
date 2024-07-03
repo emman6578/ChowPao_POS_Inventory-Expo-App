@@ -2,12 +2,11 @@ import { useProtectedRoutesApi } from "@/libraries/API/protected/protectedRoutes
 import { View, Text } from "@/src/components/Themed";
 import { useQuery } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  Button,
   ScrollView,
   TouchableOpacity,
 } from "react-native";
@@ -61,6 +60,7 @@ const Sales = () => {
 
   const paymentOptions = ["CASH", "GCASH", "PAY_LATER"];
   const paymentStatus = ["PAID", "UNPAID", "PROCESSING"];
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const { data, isLoading, error, isFetching, refetch } =
     useQuery<SalesResponse>({
@@ -70,18 +70,17 @@ const Sales = () => {
 
   useEffect(() => {
     if (data) {
-      // When data changes, reset salesData only if paymentOptions filter changes
-      if (params.paymentOptions !== "") {
-        setSalesData(
-          data.data.filter(
-            (sale) => sale.paymentOptions === params.paymentOptions
-          )
-        );
-      } else {
-        setSalesData(data.data);
-      }
+      // Combine both paymentOptions and paymentStatus filtering
+      const filteredData = data.data.filter(
+        (sale) =>
+          (params.paymentOptions === "" ||
+            sale.paymentOptions === params.paymentOptions) &&
+          (params.paymentStatus === "" ||
+            sale.paymentStatus === params.paymentStatus)
+      );
+      setSalesData(filteredData);
     }
-  }, [data, params.paymentOptions]);
+  }, [data, params.paymentOptions, params.paymentStatus]);
 
   useEffect(() => {
     setParams((prevParams) => ({ ...prevParams, page }));
@@ -90,6 +89,14 @@ const Sales = () => {
   useEffect(() => {
     refetch();
   }, [params, refetch]);
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      const selectedPageIndex = page - 1;
+      const offset = selectedPageIndex * 60; // Adjust the offset based on your button width and margin
+      scrollViewRef.current.scrollTo({ x: offset, animated: true });
+    }
+  }, [page]);
 
   const loadMore = () => {
     if (data?.pagination.page! < data?.pagination.totalPages!) {
@@ -208,19 +215,26 @@ const Sales = () => {
       {isFetching && (
         <ActivityIndicator size="large" style={styles.loadingIndicator} />
       )}
-      <View style={styles.paginationContainer}>
-        {[...Array(data?.pagination.totalPages).keys()].map((pageNumber) => (
-          <TouchableOpacity
-            key={pageNumber}
-            style={[
-              styles.pageButton,
-              page === pageNumber + 1 && styles.currentPageButton,
-            ]}
-            onPress={() => setPage(pageNumber + 1)}
-          >
-            <Text style={styles.pageButtonText}>{pageNumber + 1}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={{ alignItems: "center" }}>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          contentContainerStyle={styles.paginationContainer}
+          showsHorizontalScrollIndicator={false}
+        >
+          {[...Array(data?.pagination.totalPages).keys()].map((pageNumber) => (
+            <TouchableOpacity
+              key={pageNumber}
+              style={[
+                styles.pageButton,
+                page === pageNumber + 1 && styles.currentPageButton,
+              ]}
+              onPress={() => setPage(pageNumber + 1)}
+            >
+              <Text style={styles.pageButtonText}>{pageNumber + 1}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
     </View>
   );
@@ -271,7 +285,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   pageButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 15,
     paddingVertical: 8,
     marginHorizontal: 4,
     borderRadius: 20,
